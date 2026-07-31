@@ -252,7 +252,16 @@ nunca é acionado. Testado localmente forçando o cenário de falha (ver
 
 ## O que ficou de fora / o que faria diferente com mais tempo
 
-- **Testes de dado automatizados** (Great Expectations / Delta Live Tables expectations)
+- **dbt para Prata e Ouro.** A proposta original do case mencionava um notebook de dbt por
+  tabela; optei por PySpark puro em notebooks, uma troca consciente de tempo (testar
+  ponta a ponta com `tests/_run_local.py` deu mais confiança dentro da janela do case do
+  que configurar o adapter `dbt-databricks` do zero). Numa produção real, migraria Prata e
+  Ouro para dbt: `ref()` monta o grafo de dependência automaticamente (hoje é manual via
+  `%run` + a ordem documentada aqui), testes nativos (`unique`, `not_null`,
+  `accepted_values`, `relationships`) rodando a cada execução, e `dbt docs generate` para
+  documentação e lineage visual gerados do próprio projeto. Bronze tende a continuar em
+  Python/Auto Loader de qualquer forma — não é onde dbt brilha.
+- **Testes de dado automatizados** (Great Expectations, ou os testes nativos do dbt acima)
   entre camadas — hoje a validação é o profiling manual documentado aqui + os `log_step`
   de contagem em cada notebook, mas não há um "gate" automático que barre o pipeline se
   uma regra de qualidade quebrar.
@@ -266,10 +275,20 @@ nunca é acionado. Testado localmente forçando o cenário de falha (ver
   aproximação (depósitos − GGR) que superestima o saldo real de qualquer jogador que já
   sacou. Com dados de saque, essa métrica ficaria muito mais confiável para decidir
   "quanto esse jogador ainda tem em jogo".
-- **CI**: rodar `tests/_run_local.py` num GitHub Actions a cada PR, travando merge se o
-  pipeline quebrar — não implementado por escopo/tempo.
+- **CI/CD**: GitHub Actions rodando `tests/_run_local.py` (ou testes dbt) a cada PR,
+  travando merge se o pipeline quebrar, e Databricks Asset Bundles para deploy versionado
+  do Workflow — hoje o deploy é manual via Databricks Repos.
+- **Orquestração de produção configurada de verdade** (não só desenhada): o Databricks
+  Workflow descrito em `docs/architecture.md` — agendamento, alertas, retries — ainda não
+  foi criado de fato, só documentado.
 - **Incrementalidade real** (Auto Loader + MERGE INTO) em vez de overwrite total — ver
   `docs/architecture.md`, seção Incrementalidade, para o desenho completo.
+
+Essas escolhas refletem duas restrições reais desta entrega, não desconhecimento das
+alternativas: o tempo (o guia pede 45min-1h de implementação) e o ambiente (desenvolvido
+sem workspace Databricks disponível, depois rodado na Free Edition — que tem rede de
+saída restrita e cota apertada de compute serverless, ambas contornadas com soluções
+documentadas em `docs/apresentacao.md`, seção 6).
 
 ---
 

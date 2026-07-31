@@ -138,7 +138,68 @@ projetar isso com confiança — ver trade-offs).
 
 ---
 
-## 6. Perguntas prováveis da banca (ensaiar resposta curta pra cada uma)
+## 6. Limitações de ambiente/tempo e o que eu implementaria numa produção real
+
+*(Seção importante para deixar claro que as escolhas foram conscientes, dado o escopo do
+case — não desconhecimento das alternativas.)*
+
+### Limitações que moldaram as decisões desta entrega
+
+- **Tempo**: o guia pede 45min-1h de implementação; priorizei profundidade nas decisões
+  de negócio (dormência, taxonomia, atribuição) e testar o pipeline de ponta a ponta de
+  verdade, em vez de cobrir mais ferramentas superficialmente.
+- **Ambiente**: desenvolvi sem acesso a um workspace Databricks (testei localmente com
+  PySpark puro, emulando `%run`) e depois rodei de verdade na **Free Edition**, que tem
+  restrições reais que um workspace pago não tem — rede de saída limitada a domínios
+  confiáveis (por isso o fallback de câmbio) e cota apertada de compute serverless. Essas
+  restrições geraram decisões de engenharia genuínas (o fallback, o cálculo dinâmico da
+  raiz do repo), mas também limitaram o que dava pra testar de verdade nesta janela de
+  tempo (ex.: Databricks Workflows/Jobs eu descrevi em `docs/architecture.md`, mas não
+  cheguei a configurar um de verdade).
+
+### dbt — a peça que mais mudaria a arquitetura com mais tempo
+
+O pedido original incluía um notebook de dbt por tabela. Na prática, optei por
+**PySpark puro em notebooks Databricks**, não dbt, por uma troca consciente: dado o
+tempo disponível, escrever a lógica direto em PySpark (com testes locais reais, via
+`tests/_run_local.py`) me deu mais confiança de que tudo *rodava de verdade* do que
+configurar o adapter `dbt-databricks`, perfis de conexão, e a estrutura de projeto dbt do
+zero dentro da mesma janela.
+
+**Numa implementação de produção real, migraria a Prata e a Ouro para dbt** (a Bronze
+tende a continuar em Python/Auto Loader, que é onde dbt não brilha tanto — ingestão bruta
+não é o forte dele). O que isso ganharia sobre o que existe hoje:
+
+| Hoje (PySpark + `%run`) | Com dbt |
+|---|---|
+| Dependência entre notebooks via `%run` manual, ordem decidida por mim no README/`02_execution` | `ref()` declarativo — o dbt monta o grafo de dependência sozinho a partir do SQL |
+| Sem teste de dado automatizado — só os `log_step` de contagem que escrevi | Testes nativos (`unique`, `not_null`, `accepted_values`, `relationships`) rodando a cada execução, falhando o pipeline se uma regra quebrar |
+| Documentação das decisões só no README, separada do código | `dbt docs generate` — documentação e **lineage visual** gerados automaticamente a partir do próprio projeto |
+| Comentários de premissa como texto em `%md` | `schema.yml` com descrições por coluna, testáveis e versionadas junto com o modelo |
+| Reprocessamento incremental exigiria eu implementar `MERGE INTO` manualmente | Materialização `incremental` built-in, com estratégia de merge configurável por poucas linhas de config |
+
+Trade-off honesto: dbt teria me obrigado a reescrever o parser de taxonomia (que é lógica
+procedural em Python, bag-of-tokens) como uma UDF externa chamada de dentro do SQL do
+dbt, ou mantê-lo como um step Python separado antes do dbt — não é 100% natural encaixar
+ali, mas ainda compensaria pelo ganho em teste/documentação/lineage do resto do pipeline.
+
+### Outros itens da lista "faria diferente com mais tempo" (ver também README)
+
+- **CI/CD real**: GitHub Actions rodando `tests/_run_local.py` (ou os testes dbt) a cada
+  PR, e Databricks Asset Bundles para deploy versionado do Workflow — hoje o deploy é
+  manual via Databricks Repos.
+- **Orquestração de produção de verdade**: configurar o Databricks Workflow descrito em
+  `docs/architecture.md`, com agendamento, alertas de falha e retries — hoje só existe o
+  desenho, não a implementação.
+- **Atribuição multi-touch** em vez de last-touch.
+- **Dados de saque (withdrawals)** para saldo real, não a aproximação atual.
+- **Modelo de propensão a responder**, usando histórico de campanhas de reativação
+  anteriores (que não existe neste dataset) — passaria de "quem já provou valer" para
+  "quem tem maior chance de responder a esta campanha específica".
+
+---
+
+## 7. Perguntas prováveis da banca (ensaiar resposta curta pra cada uma)
 
 | Pergunta provável | Resposta-chave |
 |---|---|
@@ -147,11 +208,12 @@ projetar isso com confiança — ver trade-offs).
 | "O GGR negativo não invalida a análise?" | Não — é característica do dataset sintético sem vantagem de casa; por isso usei depósito confirmado pra ranquear valor, não GGR |
 | "Por que last-touch e não multi-touch?" | Simplificação documentada; multi-touch é o próximo passo natural com mais tempo |
 | "Isso escala pra produção de verdade?" | Sim — `docs/architecture.md`: Databricks Workflows, Auto Loader incremental, MERGE INTO, alertas, Unity Catalog por camada |
-| "O que você faria diferente com mais tempo?" | Testes de dado automatizados (Great Expectations), atribuição multi-touch, dados de saque pra saldo real, modelo de propensão a responder |
+| "Por que não usaram dbt, já que foi mencionado no início?" | Troca consciente de tempo: PySpark puro + testes locais reais deram mais confiança dentro da janela do case do que configurar o adapter dbt-databricks do zero; ver seção 6 para o plano de migração |
+| "O que você faria diferente com mais tempo?" | dbt para Prata/Ouro, testes de dado automatizados, atribuição multi-touch, dados de saque pra saldo real, modelo de propensão a responder |
 
 ---
 
-## 7. Como fechar
+## 8. Como fechar
 
 > "A resposta pra pergunta original da liderança: mirem os 60 jogadores de alto e médio
 > valor — 52% da base dormente, 88% do valor — com oferta bonus50 em sports. É a alavanca
