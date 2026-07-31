@@ -46,7 +46,7 @@ df_players_raw = (
 
 # Coluna de rastreabilidade da origem — essencial em auditoria: de qual arquivo/carga
 # exatamente essa linha veio.
-df_players_bronze = df_players_raw.withColumn("_source_file", F.input_file_name())
+df_players_bronze = df_players_raw.withColumn("_source_file", F.col("_metadata.file_path"))
 
 write_table(df_players_bronze, layer="bronze", table_name="players")
 

@@ -39,7 +39,7 @@ df_deposits_raw = (
     .load(RAW_FILES["deposits"])
 )
 
-df_deposits_bronze = df_deposits_raw.withColumn("_source_file", F.input_file_name())
+df_deposits_bronze = df_deposits_raw.withColumn("_source_file", F.col("_metadata.file_path"))
 
 write_table(df_deposits_bronze, layer="bronze", table_name="deposits")
 

@@ -36,7 +36,7 @@ df_bets_raw = (
     .load(RAW_FILES["bets"])
 )
 
-df_bets_bronze = df_bets_raw.withColumn("_source_file", F.input_file_name())
+df_bets_bronze = df_bets_raw.withColumn("_source_file", F.col("_metadata.file_path"))
 
 write_table(df_bets_bronze, layer="bronze", table_name="bets")
 

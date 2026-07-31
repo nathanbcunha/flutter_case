@@ -38,7 +38,7 @@ df_touchpoints_raw = (
     .load(RAW_FILES["campaign_touchpoints"])
 )
 
-df_touchpoints_bronze = df_touchpoints_raw.withColumn("_source_file", F.input_file_name())
+df_touchpoints_bronze = df_touchpoints_raw.withColumn("_source_file", F.col("_metadata.file_path"))
 
 write_table(df_touchpoints_bronze, layer="bronze", table_name="campaign_touchpoints")
 

@@ -38,7 +38,7 @@ df_campaigns_raw = (
     .load(RAW_FILES["campaigns"])
 )
 
-df_campaigns_bronze = df_campaigns_raw.withColumn("_source_file", F.input_file_name())
+df_campaigns_bronze = df_campaigns_raw.withColumn("_source_file", F.col("_metadata.file_path"))
 
 write_table(df_campaigns_bronze, layer="bronze", table_name="campaigns")
 
