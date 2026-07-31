@@ -96,10 +96,39 @@ def fetch_frankfurter_timeseries(start_date: str, end_date: str, symbols: str,
     raise RuntimeError(f"Falha ao buscar câmbio após {max_retries} tentativas: {last_error}")
 
 
-raw_fx_response = fetch_frankfurter_timeseries(FX_START_DATE, FX_END_DATE, symbols="BRL,USD")
-log_step("bronze_fx_rates",
-          f"{len(raw_fx_response.get('rates', {}))} datas retornadas pela API "
-          f"(base={raw_fx_response.get('base')})")
+# MAGIC %md
+# MAGIC ### Fallback: degradação controlada quando a API está inacessível
+# MAGIC
+# MAGIC Alguns ambientes (ex.: Databricks Free Edition, que restringe egress de rede a uma
+# MAGIC lista fechada de domínios confiáveis) bloqueiam chamadas a APIs externas arbitrárias.
+# MAGIC Em vez de deixar o pipeline inteiro travar por causa disso, caímos para um seed de
+# MAGIC câmbio versionado junto com o repositório (`data/fx_rates_fallback_seed.json`) —
+# MAGIC **claramente sinalizado como fallback**, nunca silencioso. Em produção real (rede
+# MAGIC liberada, workspace pago), esse fallback nunca é acionado; ele existe para o pipeline
+# MAGIC continuar demonstrável mesmo em um ambiente com rede restrita, e para ilustrar um
+# MAGIC padrão de resiliência real diante de uma dependência externa instável.
+
+# COMMAND ----------
+
+def load_fx_fallback_seed():
+    fallback_path = f"{REPO_ROOT}/data/fx_rates_fallback_seed.json"
+    with open(fallback_path) as f:
+        return json.load(f)
+
+
+try:
+    raw_fx_response = fetch_frankfurter_timeseries(FX_START_DATE, FX_END_DATE, symbols="BRL,USD")
+    used_fallback = False
+    log_step("bronze_fx_rates",
+              f"{len(raw_fx_response.get('rates', {}))} datas retornadas pela API "
+              f"(base={raw_fx_response.get('base')})")
+except Exception as e:
+    log_step("bronze_fx_rates",
+              f"AVISO: API de câmbio inacessível ({e}). Usando fallback local "
+              f"(data/fx_rates_fallback_seed.json) — cotações NÃO são as mais recentes; "
+              f"isso é degradação controlada, não um erro silencioso.")
+    raw_fx_response = load_fx_fallback_seed()
+    used_fallback = True
 
 # COMMAND ----------
 
@@ -115,7 +144,8 @@ log_step("bronze_fx_rates",
 
 raw_rows = []
 for date_str, rates in raw_fx_response.get("rates", {}).items():
-    row = {"rate_date": date_str, "base_currency": raw_fx_response.get("base", "EUR")}
+    row = {"rate_date": date_str, "base_currency": raw_fx_response.get("base", "EUR"),
+           "used_fallback_source": used_fallback}
     row.update(rates)
     raw_rows.append(row)
 

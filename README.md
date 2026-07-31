@@ -219,6 +219,19 @@ campanha — é regra de jogo responsável, não opcional. Jogadores com **KYC r
 também ficam de fora por padrão (não conseguem operar/sacar plenamente) — essa é revisável
 com o time de Compliance/Risk, mas adotamos como padrão conservador.
 
+### 11. Resiliência a rede restrita (ex.: Databricks Free Edition)
+
+Alguns workspaces (notadamente o **Databricks Free Edition**, gratuito) restringem saída
+de rede a uma lista fechada de domínios confiáveis — `api.frankfurter.dev` não está nela,
+então a chamada de câmbio falha por lá. Em vez de deixar o pipeline inteiro travar por
+causa de uma dependência externa fora do nosso controle, `bronze_fx_rates.py` cai para um
+**seed de câmbio versionado no repositório** (`data/fx_rates_fallback_seed.json`) quando
+todas as tentativas de chamar a API real falham — **sempre com aviso explícito no log e
+uma coluna `used_fallback_source`** rastreando a origem, nunca silenciosamente. Em
+qualquer ambiente com rede liberada (Databricks pago, ou local com internet), o fallback
+nunca é acionado. Testado localmente forçando o cenário de falha (ver
+`tests/_run_local.py` sem a flag `MOCK_FRANKFURTER`) — o pipeline completa normalmente.
+
 ---
 
 ## Recomendação de negócio (resumo — números completos no notebook `gold_recommendation`)
