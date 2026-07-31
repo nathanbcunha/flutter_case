@@ -95,6 +95,7 @@ def fetch_frankfurter_timeseries(start_date: str, end_date: str, symbols: str,
                 time.sleep(backoff_seconds * attempt)
     raise RuntimeError(f"Falha ao buscar câmbio após {max_retries} tentativas: {last_error}")
 
+# COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Fallback: degradação controlada quando a API está inacessível
