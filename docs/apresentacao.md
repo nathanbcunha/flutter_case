@@ -148,14 +148,13 @@ case — não desconhecimento das alternativas.)*
 - **Tempo**: o guia pede 45min-1h de implementação; priorizei profundidade nas decisões
   de negócio (dormência, taxonomia, atribuição) e testar o pipeline de ponta a ponta de
   verdade, em vez de cobrir mais ferramentas superficialmente.
-- **Ambiente**: desenvolvi sem acesso a um workspace Databricks (testei localmente com
-  PySpark puro, emulando `%run`) e depois rodei de verdade na **Free Edition**, que tem
-  restrições reais que um workspace pago não tem — rede de saída limitada a domínios
-  confiáveis (por isso o fallback de câmbio) e cota apertada de compute serverless. Essas
-  restrições geraram decisões de engenharia genuínas (o fallback, o cálculo dinâmico da
-  raiz do repo), mas também limitaram o que dava pra testar de verdade nesta janela de
-  tempo (ex.: Databricks Workflows/Jobs eu descrevi em `docs/architecture.md`, mas não
-  cheguei a configurar um de verdade).
+- **Ambiente**: rodei o pipeline de ponta a ponta na **Free Edition** do Databricks (a
+  versão gratuita), que tem restrições reais que um workspace pago não tem — rede de
+  saída limitada a domínios confiáveis (por isso o fallback de câmbio) e cota apertada de
+  compute serverless. Essas restrições geraram decisões de engenharia genuínas (o
+  fallback, o cálculo dinâmico da raiz do repo), mas também limitaram o que dava pra
+  configurar de verdade nesta janela de tempo (ex.: Databricks Workflows/Jobs eu descrevi
+  em `docs/architecture.md`, mas não cheguei a configurar um de verdade).
 
 ### dbt — a peça que mais mudaria a arquitetura com mais tempo
 

@@ -3,11 +3,16 @@
 Pipeline de dados em arquitetura medalhão (Bronze/Prata/Ouro) no Databricks, para responder:
 **quais jogadores dormentes vale a pena reativar, com qual oferta, e quanto eles valem?**
 
+Pipeline desenvolvido com apoio de IA (uso liberado pelo case) e validado e executado por
+mim, de ponta a ponta, em um workspace Databricks (Free Edition) — as tabelas finais e a
+recomendação em `gold.recommendation_summary` são o resultado dessa execução real, não
+apenas simulação local.
+
 ---
 
 ## Como rodar
 
-### No Databricks (produção real)
+### No Databricks (como foi executado nesta entrega)
 
 1. Importe este repositório via **Databricks Repos** (Git integration).
 2. Rode os notebooks na ordem: `notebooks/00_config` → `notebooks/01_setup` → cada
@@ -18,14 +23,20 @@ Pipeline de dados em arquitetura medalhão (Bronze/Prata/Ouro) no Databricks, pa
    via Databricks Repos/Workflow). Os paths de dado (`data/*.csv`) e de output local são
    relativos à raiz do repo, não ao notebook individual.
 4. Sem variáveis de ambiente/segredo necessárias — a API de câmbio (Frankfurter) é
-   pública, sem autenticação.
+   pública, sem autenticação. Em ambientes com rede de saída restrita (ex.: Databricks
+   Free Edition), o pipeline cai automaticamente para um fallback local — ver seção 11 em
+   "Decisões e premissas".
 5. Tabelas ficam em `{catalog}.bronze/silver/gold.*` no Unity Catalog, onde
    `catalog = flutter_martech_{env}` (`env` é um widget no `00_config`, default `dev`).
 
-### Localmente (validação/revisão sem workspace Databricks)
+### Localmente (modo de teste e desenvolvimento, fora do Databricks)
 
-Este é o modo usado para gerar os arquivos em `outputs/` deste repositório, já que não
-havia um workspace Databricks disponível durante o desenvolvimento.
+Durante o desenvolvimento, cada notebook foi validado localmente antes de rodar no
+Databricks — permite testar a lógica de transformação isoladamente (dedup, conversão de
+câmbio, parser de taxonomia) sem depender de um cluster, e é a base para uma futura
+esteira de CI. Os arquivos em `outputs/` deste repositório vieram dessa validação local.
+
+
 
 ```bash
 pip install pyspark==3.5.1
@@ -53,12 +64,12 @@ MOCK_FRANKFURTER=1 python3 tests/_run_local.py \
 
 `tests/_run_local.py` emula o `%run` do Databricks (mesmo namespace Python entre
 notebooks). A flag `MOCK_FRANKFURTER=1` troca a chamada real à API de câmbio por um
-fixture local (`tests/fixtures/frankfurter_timeseries_MOCK.json`) — **só necessário
-porque o sandbox onde este case foi desenvolvido não tinha saída de rede liberada para
-`api.frankfurter.dev`**. O código de `bronze_fx_rates.py` em si chama a API real via
-`urllib`; em Databricks (que tem internet liberada) ou em qualquer outro ambiente com
-rede aberta, ele funciona sem essa flag e sem nenhuma mudança de código. Ver
-`tests/fixtures/README.md` para detalhe.
+fixture local (`tests/fixtures/frankfurter_timeseries_MOCK.json`) — **útil para testar a
+lógica de forward-fill sem depender de acesso à internet**, o que também é relevante para
+ambientes com rede de saída restrita (ver seção 11 abaixo). O código de
+`bronze_fx_rates.py` em si sempre tenta a API real primeiro via `urllib`; a flag e o
+fixture só entram em cena nesse modo de teste isolado, nunca no notebook rodando de
+verdade no Databricks. Ver `tests/fixtures/README.md` para detalhe.
 
 ---
 
@@ -285,10 +296,10 @@ nunca é acionado. Testado localmente forçando o cenário de falha (ver
   `docs/architecture.md`, seção Incrementalidade, para o desenho completo.
 
 Essas escolhas refletem duas restrições reais desta entrega, não desconhecimento das
-alternativas: o tempo (o guia pede 45min-1h de implementação) e o ambiente (desenvolvido
-sem workspace Databricks disponível, depois rodado na Free Edition — que tem rede de
-saída restrita e cota apertada de compute serverless, ambas contornadas com soluções
-documentadas em `docs/apresentacao.md`, seção 6).
+alternativas: o tempo (o guia pede 45min-1h de implementação) e o ambiente — a Free
+Edition do Databricks, onde rodei o pipeline, tem rede de saída restrita e cota apertada
+de compute serverless, ambas contornadas com soluções documentadas em
+`docs/apresentacao.md`, seção 6.
 
 ---
 
