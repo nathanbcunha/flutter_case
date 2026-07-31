@@ -46,6 +46,30 @@ STORAGE_FORMAT = "delta" if RUNNING_ON_DATABRICKS else "parquet"
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Raiz do repositório (calculada, não assumida)
+# MAGIC
+# MAGIC O working directory de um notebook dentro de Databricks Repos varia entre versões de
+# MAGIC runtime (às vezes é a pasta do próprio notebook, às vezes a raiz do repo). Em vez de
+# MAGIC assumir um dos dois, perguntamos ao próprio contexto do notebook onde ele está e
+# MAGIC subimos até a raiz do repo — funciona igual não importa de onde o notebook é chamado.
+
+# COMMAND ----------
+
+if RUNNING_ON_DATABRICKS:
+    _notebook_path = (
+        dbutils.notebook.entry_point.getDbutils().notebook().getContext()
+        .notebookPath().get()
+    )
+    # _notebook_path é algo como /Repos/<usuario>/flutter_case/notebooks/00_config/00_config
+    # A raiz do repo é tudo antes de "/notebooks/".
+    REPO_ROOT = "/Workspace" + _notebook_path.split("/notebooks/")[0]
+else:
+    # Execução local: tests/_run_local.py sempre roda com cwd = raiz do repositório.
+    REPO_ROOT = "."
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Paths de origem (raw data)
 # MAGIC
 # MAGIC Em produção, isso seria um volume do Unity Catalog (`/Volumes/...`) alimentado por um
@@ -58,7 +82,13 @@ STORAGE_FORMAT = "delta" if RUNNING_ON_DATABRICKS else "parquet"
 # Path relativo à raiz do repositório (não ao notebook individual). Pressupõe execução com
 # working directory = raiz do repo, que é o padrão ao rodar via Databricks Job/Workflow
 # apontando para um Databricks Repo, e é o que o notebook 02_execution garante explicitamente.
-RAW_DATA_PATH = "data" if not RUNNING_ON_DATABRICKS else "/Volumes/flutter_martech/landing/raw_exports"
+# Para ESTE case, os dados brutos vivem dentro do próprio repositório (pasta data/),
+# então lemos de lá tanto local quanto no Databricks — é o que realmente existe para
+# rodar. Em uma implantação de produção real, isso apontaria para um Volume do Unity
+# Catalog alimentado por um processo de landing (Fivetran, SFTP drop, export do sistema
+# transacional) em vez de um CSV versionado no Git — comentário deixado aqui de propósito
+# para a conversa técnica sobre a diferença entre "rodar o case" e "produção real".
+RAW_DATA_PATH = f"{REPO_ROOT}/data"
 
 RAW_FILES = {
     "players": f"{RAW_DATA_PATH}/players.csv",

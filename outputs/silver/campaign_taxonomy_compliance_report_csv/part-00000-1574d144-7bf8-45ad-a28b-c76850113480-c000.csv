@@ -1,0 +1,13 @@
+campaign_id,campaign_name,compliance_category,channel_source_conflict,parse_notes,_ingested_at
+C001,BR_email_reactivation_casino_dormant_2024Q1_bonus50,conforme,false,nome 100% conforme ao padrão oficial,2026-07-31T13:00:09.613Z
+C002,PT-push-acquisition-sports-new-2024Q1-freebet,recuperado_automaticamente,false,7/7 segmentos recuperados via correspondência de vocabulário (formato/ordem fora do padrão),2026-07-31T13:00:09.613Z
+C003,br_EMAIL_Reactivation_Casino_Dormant_2024Q1_BONUS50,recuperado_automaticamente,true,7/7 segmentos recuperados via correspondência de vocabulário (formato/ordem fora do padrão),2026-07-31T13:00:09.613Z
+C004,BR_email_reactivation_2024Q1_bonus50,recuperado_automaticamente,false,"5/7 segmentos recuperados via correspondência de vocabulário (formato/ordem fora do padrão); segmentos não encontrados: ['product', 'audience']",2026-07-31T13:00:09.613Z
+C005,BR_push_reactivaton_casino_dorment_2024Q1_bonus_50,recuperado_automaticamente,false,"6/7 segmentos recuperados via correspondência de vocabulário (formato/ordem fora do padrão); segmentos não encontrados: ['offer']; tokens ignorados (não reconhecidos): ['bonus', '50']",2026-07-31T13:00:09.613Z
+C006,BR_email_2024Q1__both_crosssell___vip_freespins_v2_FINAL_,recuperado_automaticamente,false,"7/7 segmentos recuperados via correspondência de vocabulário (formato/ordem fora do padrão); tokens ignorados (não reconhecidos): ['v2', 'final']",2026-07-31T13:00:09.613Z
+C007,,requer_revisao_manual,false,nome de campanha vazio - requer categorização manual,2026-07-31T13:00:09.613Z
+C008,Reativacao Janeiro,requer_revisao_manual,false,nenhum segmento reconhecível (não segue o padrão nem parcialmente) - requer categorização manual,2026-07-31T13:00:09.613Z
+C009,BR_sms_retention_sports_active_2024Q1_cashback,conforme,false,nome 100% conforme ao padrão oficial,2026-07-31T13:00:09.613Z
+C010,PT_email_acquisition_casino_new_2024Q1_bonus100,conforme,false,nome 100% conforme ao padrão oficial,2026-07-31T13:00:09.613Z
+C011,BR_push_reactivation_sports_dormant_2024Q1_freebet,conforme,false,nome 100% conforme ao padrão oficial,2026-07-31T13:00:09.613Z
+C012,_email_AO__vip_crosssell_both_2024Q1_none_,recuperado_automaticamente,false,7/7 segmentos recuperados via correspondência de vocabulário (formato/ordem fora do padrão),2026-07-31T13:00:09.613Z
