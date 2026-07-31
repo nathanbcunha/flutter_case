@@ -1,8 +1,5 @@
 # Roteiro de apresentação — Case Martech Specialist
 
-Guia de apoio para os ~30-45 min de apresentação + Q&A. Números confirmados rodando de
-verdade no Databricks (não são estimativa — são o output real de `gold.recommendation_summary`
-e das tabelas Gold, validados em 31/07).
 
 ---
 
