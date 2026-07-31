@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# PySpark local
+metastore_db/
+spark-warehouse/
+derby.log
+*.crc
+_SUCCESS
+
+# OS
+.DS_Store
